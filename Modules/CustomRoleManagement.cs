@@ -14,14 +14,15 @@ public static class CustomRoleManagement
     public static string GetRole(byte playerId)
     {
         PlayerRoles.TryGetValue(playerId, out string role);
-        return role ?? "无";
+        return role ?? "None";
     }
 
     public static void AssignRoles()
     {
         if (Options.Gamemode.GetValue() > 1) return;
 
-        // 任务阵营角色
+        // crewmateRoles = assigned with crewmate role base
+        // impostorRoles = assigned with impostor role base
         List<(string roleName, int percentage)> crewmateRoles = new()
         {
             ("Jester", Options.JesterPerc.GetInt()),
@@ -30,12 +31,11 @@ public static class CustomRoleManagement
 
         List<(string roleName, int percentage)> impostorRoles = new()
         {
+
         };
 
         List<PlayerControl> availablePlayers = new();
-        foreach (var player in PlayerControl.AllPlayerControls)
-            availablePlayers.Add(player);
-
+        foreach (var player in PlayerControl.AllPlayerControls) availablePlayers.Add(player);
         availablePlayers = availablePlayers.OrderBy(x => random.Next()).ToList();
         PlayerRoles.Clear();
 
@@ -49,14 +49,12 @@ public static class CustomRoleManagement
 
             foreach (var (roleName, percentage) in rolesToAssign)
             {
-                if (attemptedRoles.Contains(roleName) || percentage == 0)
-                    continue;
+                if (attemptedRoles.Contains(roleName) || percentage == 0) continue;
 
                 attemptedRoles.Add(roleName);
 
                 int randomValue = random.Next(0, 101);
-
-                Logger.Info($"{roleName}, 数值: {randomValue}, 概率: {percentage}", "开始分配自定义角色");
+                Logger.Info($"{roleName}, Value: {randomValue}, Percentage: {percentage}", "StartGameCustomRole1");
 
                 if (randomValue > percentage) continue;
                 if (PlayerRoles.ContainsKey(player.PlayerId)) continue;
@@ -64,7 +62,7 @@ public static class CustomRoleManagement
                 PlayerRoles[player.PlayerId] = roleName;
                 assignedRoles.Add(roleName);
 
-                Logger.Info($"({player.PlayerId}) {player.Data.PlayerName} -> {roleName}", "角色分配结果");
+                Logger.Info($"({player.PlayerId}) {player.Data.PlayerName} -> {roleName}", "StartGameCustomRole2");
                 break;
             }
         }
@@ -93,11 +91,9 @@ public static class CustomRoleManagement
         var impostorRoles = new List<string>();
         var lines = new List<string>();
 
-        if (Options.MayorPerc.GetInt() > 1)
-            crewmateRoles.Add(Translator.Get("Mayor") + TD(Options.MayorPerc.GetInt().ToString()) + "%");
+        if (Options.MayorPerc.GetInt() > 1) crewmateRoles.Add(Translator.Get("Mayor") + TD(Options.MayorPerc.GetInt().ToString()) + "%");
 
-        if (Options.JesterPerc.GetInt() > 1)
-            neutralRoles.Add(Translator.Get("Jester") + TD(Options.JesterPerc.GetInt().ToString()) + "%");
+        if (Options.JesterPerc.GetInt() > 1) neutralRoles.Add(Translator.Get("Jester") + TD(Options.JesterPerc.GetInt().ToString()) + "%");
 
         void AddCategory(string header, List<string> roles)
         {
@@ -109,16 +105,15 @@ public static class CustomRoleManagement
             lines.AddRange(roles);
         }
 
-        AddCategory("船员阵营:", crewmateRoles);
-        AddCategory("中立阵营:", neutralRoles);
-        AddCategory("内鬼阵营:", impostorRoles);
+        AddCategory("Crewmate:", crewmateRoles);
+        AddCategory("Neutral:", neutralRoles);
+        AddCategory("Impostor:", impostorRoles);
 
         return lines.Count > 0 ? string.Join("\n", lines) : string.Empty;
     }
 
     public static bool HandlingRoleMessages = false;
     private static int PendingRoleMessages = 0;
-
     public static void SendRoleMessages(Dictionary<string, string> roleMessages)
     {
         if (PlayerRoles.Count == 0 || PlayerControl.LocalPlayer.Data.IsDead) return;
@@ -142,8 +137,7 @@ public static class CustomRoleManagement
             if (sentRoles.Contains(role)) continue;
 
             PendingRoleMessages++;
-
-            new LateTask(() =>
+            new LateTask(() => 
             {
                 if (Utils.InGame)
                 {
@@ -151,7 +145,7 @@ public static class CustomRoleManagement
                 }
                 else
                 {
-                    Logger.Info("角色消息发送被强制取消（异常情况）", "SendRoleMessages");
+                    Logger.Info("Role sending was forcefully canceled. This should not happen.", "SendRoleMessages");
                 }
 
                 PendingRoleMessages--;
@@ -162,7 +156,6 @@ public static class CustomRoleManagement
                     HandlingRoleMessages = false;
                     sentRoles.Clear();
                 }
-
             }, delay, "SendRoleMessage");
 
             sentRoles.Add(role);
@@ -172,8 +165,7 @@ public static class CustomRoleManagement
 
     public static string PlayerToCustomRole()
     {
-        if (CustomRoleManagement.PlayerRoles.Count == 0)
-            return string.Empty;
+        if (CustomRoleManagement.PlayerRoles.Count == 0) return string.Empty;
 
         Dictionary<string, List<string>> roleToPlayers = new Dictionary<string, List<string>>();
 
@@ -183,7 +175,6 @@ public static class CustomRoleManagement
             string role = kvp.Value;
 
             PlayerControl pc = null;
-
             foreach (var p in PlayerControl.AllPlayerControls)
             {
                 if (p.PlayerId == playerId)
@@ -195,14 +186,11 @@ public static class CustomRoleManagement
 
             if (pc == null) continue;
 
-            if (!roleToPlayers.ContainsKey(role))
-                roleToPlayers[role] = new List<string>();
-
+            if (!roleToPlayers.ContainsKey(role)) roleToPlayers[role] = new List<string>();
             roleToPlayers[role].Add(pc.Data.PlayerName);
         }
 
-        if (roleToPlayers.Count == 0)
-            return string.Empty;
+        if (roleToPlayers.Count == 0) return string.Empty;
 
         var lines = new List<string>();
 
@@ -211,7 +199,6 @@ public static class CustomRoleManagement
             string players = string.Join(", ", entry.Value);
             lines.Add($"{entry.Key}: {players}");
         }
-
         return string.Join("\n", lines);
     }
 }

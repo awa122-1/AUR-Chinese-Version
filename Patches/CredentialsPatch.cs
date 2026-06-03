@@ -188,28 +188,30 @@ namespace AmongUsRevamped
             if (template == null) return;
 
             if (buttonParent == null) buttonParent = template.transform.parent;
-            if (BiliBiliButton == null)
+            if (discordButton == null)
             {
-               BiliBiliButton = CreateButton(
-                  _instance.
-                  "BiliBiliButton",
-                  new(2.1f, 4.05f, 1f),
-                  new(88, 101, 242, byte.MaxValue),
-                  new(148, 161, byte.MaxValue, byte.MaxValue),
-                  () => Application.OpenURL("https://b23.tv/h3Hnqqf"),("BiliBili")
-                  
-                 if (BiliButton == null)
+                discordButton = CreateButton(
+                    __instance,
+                    "DiscordButton",
+                    new(2.1f, 4.05f, 1f),
+                    new(88, 101, 242, byte.MaxValue),
+                    new(148, 161, byte.MaxValue, byte.MaxValue),
+                    () => Application.OpenURL("https://discord.gg/83Zhzhyhya"),
+                    "Discord");
+            }
+
+            if (gitHubButton == null)
             {
-               BiliButton = CreateButton(
-                  _instance.
-                  "BiliButton",
-                  new(2.1f, 4.05f, 1f),
-                  new(88, 101, 242, byte.MaxValue),
-                  new(148, 161, byte.MaxValue, byte.MaxValue),
-                  () => Application.OpenURL("https://b23.tv/r3e1u0x"),("BiliBili")
-           
-                  
-            if (BiliButton
+                gitHubButton = CreateButton(
+                    __instance,
+                    "GitHubButton",
+                    new(3.8f, 4.05f, 1f),
+                    new(153, 153, 153, byte.MaxValue),
+                    new(209, 209, 209, byte.MaxValue),
+                    () => Application.OpenURL("https://github.com/ApeMV/AmongUsRevamped"),
+                    "GitHub");
+            }
+
             var bg = GameObject.Find("BackgroundTexture");
             if (bg != null)
             {
@@ -252,7 +254,7 @@ namespace AmongUsRevamped
                     }
                     if (playbutton.TryGetComponent<TextMeshPro>(out var text))
                     {
-                        text.text = "开始";
+                        text.text = "Start";
                     }
                 }
             }

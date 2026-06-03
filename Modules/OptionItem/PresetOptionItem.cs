@@ -7,7 +7,7 @@ namespace AmongUsRevamped
         public IntegerValueRule Rule;
 
         public PresetOptionItem(int defaultValue, TabGroup tab)
-        : base(0, "预设", defaultValue, tab, true)
+        : base(0, "Preset", defaultValue, tab, true)
         {
             Rule = (0, 4, 1);
         }
@@ -22,11 +22,11 @@ namespace AmongUsRevamped
         {
             return CurrentValue switch
             {   
-                0 => Main.Preset1.Value == (string)Main.Preset1.DefaultValue ? "预设 1" : Main.Preset1.Value,
-                1 => Main.Preset2.Value == (string)Main.Preset2.DefaultValue ? "预设 2" : Main.Preset2.Value,
-                2 => Main.Preset3.Value == (string)Main.Preset3.DefaultValue ? "预设 3" : Main.Preset3.Value,
-                3 => Main.Preset4.Value == (string)Main.Preset4.DefaultValue ? "预设 4" : Main.Preset4.Value,
-                4 => Main.Preset5.Value == (string)Main.Preset5.DefaultValue ? "预设 5" : Main.Preset5.Value,
+                0 => Main.Preset1.Value == (string)Main.Preset1.DefaultValue ? "Preset 1" : Main.Preset1.Value,
+                1 => Main.Preset2.Value == (string)Main.Preset2.DefaultValue ? "Preset 2" : Main.Preset2.Value,
+                2 => Main.Preset3.Value == (string)Main.Preset3.DefaultValue ? "Preset 3" : Main.Preset3.Value,
+                3 => Main.Preset4.Value == (string)Main.Preset4.DefaultValue ? "Preset 4" : Main.Preset4.Value,
+                4 => Main.Preset5.Value == (string)Main.Preset5.DefaultValue ? "Preset 5" : Main.Preset5.Value,
                 _ => null,
             };
         }

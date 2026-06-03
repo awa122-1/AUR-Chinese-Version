@@ -72,7 +72,7 @@ namespace AmongUsRevamped
             rolesettings.transform.localPosition = new(-2.4f, -0.4f, 0f);
             var label = rolesettings.GetComponentInChildren<TextMeshPro>();
             label.DestroyTranslator();
-            label.text = "Vanilla Roles";
+            label.text = "原版角色";
         }
 
         [HarmonyPatch(nameof(GameSettingMenu.ChangeTab)), HarmonyPrefix]
@@ -116,13 +116,13 @@ namespace AmongUsRevamped
                             __instance.MenuDescriptionText.text = "Quality settings to improve comfort and testing.";
                             break;
                         case TabGroup.CustomRoleSettings:
-                            __instance.MenuDescriptionText.text = "Custom Role enabling and settings.";
+                            __instance.MenuDescriptionText.text = "自定义角色启用与设置";
                             break;
                         case TabGroup.ModSettings:
-                            __instance.MenuDescriptionText.text = "Gameplay Settings to improve the in-game experience.";
+                            __instance.MenuDescriptionText.text = "游戏玩法设置以提升游戏体验。";
                             break;
                         case TabGroup.GamemodeSettings:
-                            __instance.MenuDescriptionText.text = "Situational settings to apply for specific gamemodes.";
+                            __instance.MenuDescriptionText.text = "针对特定游戏模式应用的情境设置。";
                             break;
                     }
                 }

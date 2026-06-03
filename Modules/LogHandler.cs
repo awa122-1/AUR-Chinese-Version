@@ -23,19 +23,14 @@ class LogHandler(string tag) : ILogHandler
 
     public void Info(string text)
         => Logger.Info(text, Tag, true);
-
     public void Warn(string text)
         => Logger.Warn(text, Tag, true);
-
     public void Error(string text)
         => Logger.Error(text, Tag, true);
-
     public void Fatal(string text)
         => Logger.Fatal(text, Tag, true);
-
     public void Msg(string text)
         => Logger.Msg(text, Tag, true);
-
     public void Exception(Exception ex)
         => Logger.Exception(ex, Tag);
 }
@@ -49,203 +44,110 @@ class Logger
 
     public static bool isDetail = false;
     public static bool isAlsoInGame = false;
-
     public static void Enable() => IsEnable = true;
     public static void Disable() => IsEnable = false;
-
     public static void Enable(string tag, bool toGame = false)
     {
         DisableList.Remove(tag);
-
-        if (toGame && !SendToGameList.Contains(tag))
-            SendToGameList.Add(tag);
-        else
-            SendToGameList.Remove(tag);
+        if (toGame && !SendToGameList.Contains(tag)) SendToGameList.Add(tag);
+        else SendToGameList.Remove(tag);
     }
-
-    public static void Disable(string tag)
-    {
-        if (!DisableList.Contains(tag))
-            DisableList.Add(tag);
-    }
-
-    // 👉 游戏内提示日志
+    public static void Disable(string tag) { if (!DisableList.Contains(tag)) DisableList.Add(tag); }
     public static void SendInGame(string text)
     {
         if (!IsEnable) return;
-
-        if (DestroyableSingleton<HudManager>._instance)
-            DestroyableSingleton<HudManager>.Instance.Notifier.AddDisconnectMessage(text);
+        if (DestroyableSingleton<HudManager>._instance) DestroyableSingleton<HudManager>.Instance.Notifier.AddDisconnectMessage(text);
     }
-
-    // =========================
-    // 🔥 核心日志写入函数
-    // =========================
-    private static void SendToFile(
-        string text,
-        LogLevel level = LogLevel.Info,
-        string tag = "",
-        bool escapeCRLF = true,
-        int lineNumber = 0,
-        string fileName = "",
-        bool multiLine = false)
+    private static void SendToFile(string text, LogLevel level = LogLevel.Info, string tag = "", bool escapeCRLF = true, int lineNumber = 0, string fileName = "", bool multiLine = false)
     {
         if (!IsEnable || DisableList.Contains(tag)) return;
-
         var logger = Main.Logger;
 
-        // 👉 同时发送到游戏内
         if (SendToGameList.Contains(tag) || isAlsoInGame)
         {
             SendInGame($"[{tag}]{text}");
         }
 
         string log_text;
-
-        // 🔴 错误/警告详细堆栈日志
-        if (level is LogLevel.Error or LogLevel.Fatal or LogLevel.Warning
-            && !multiLine
-            && !NowDetailedErrorLog.Contains(tag))
+        if (level is LogLevel.Error or LogLevel.Fatal or LogLevel.Warning && !multiLine && !NowDetailedErrorLog.Contains(tag))
         {
             string t = DateTime.Now.ToString("HH:mm:ss");
             StackFrame stack = new(2);
-
             string className = stack.GetMethod()?.ReflectedType?.Name;
             string memberName = stack.GetMethod()?.Name;
-
-            log_text =
-                $"[{t}][{className}.{memberName}({Path.GetFileName(fileName)}:{lineNumber})][{tag}]{text}";
-
+            log_text = $"[{t}][{className}.{memberName}({Path.GetFileName(fileName)}:{lineNumber})][{tag}]{text}";
             NowDetailedErrorLog.Add(tag);
-
             _ = new LateTask(() => NowDetailedErrorLog.Remove(tag), 3f);
         }
         else
         {
-            if (escapeCRLF)
-                text = text.Replace("\r", "\\r").Replace("\n", "\\n");
-
+            if (escapeCRLF) text = text.Replace("\r", "\\r").Replace("\n", "\\n");
             string t = DateTime.Now.ToString("HH:mm:ss");
             log_text = $"[{t}][{tag}]{text}";
         }
 
-        // =========================
-        // 📌 输出到 BepInEx 控制台
-        // =========================
         switch (level)
         {
             case LogLevel.Info when !multiLine:
                 logger.LogInfo(log_text);
                 break;
-
             case LogLevel.Info:
                 log_text.Split("\\n").Do(logger.LogInfo);
                 break;
-
             case LogLevel.Warning when !multiLine:
                 logger.LogWarning(log_text);
                 break;
-
             case LogLevel.Warning:
                 log_text.Split("\\n").Do(logger.LogWarning);
                 break;
-
             case LogLevel.Error when !multiLine:
                 logger.LogError(log_text);
                 break;
-
             case LogLevel.Error:
                 log_text.Split("\\n").Do(logger.LogError);
                 break;
-
             case LogLevel.Fatal when !multiLine:
                 logger.LogFatal(log_text);
                 break;
-
             case LogLevel.Fatal:
                 log_text.Split("\\n").Do(logger.LogFatal);
                 break;
-
             case LogLevel.Message when !multiLine:
                 logger.LogMessage(log_text);
                 break;
-
             case LogLevel.Message:
                 log_text.Split("\\n").Do(logger.LogMessage);
                 break;
-
             case LogLevel.Debug when !multiLine:
                 logger.LogFatal(log_text);
                 break;
-
             case LogLevel.Debug:
                 log_text.Split("\\n").Do(logger.LogFatal);
                 break;
-
             default:
-                logger.LogWarning("错误：无效的日志等级");
+                logger.LogWarning("Error: Invalid LogLevel");
                 logger.LogInfo(log_text);
                 break;
         }
     }
-
-    // =========================
-    // 🧪 调试测试日志
-    // =========================
-    public static void Test(
-        object content,
-        string tag = "======= 测试 =======",
-        bool escapeCRLF = true,
-        [CallerLineNumber] int lineNumber = 0,
-        [CallerFilePath] string fileName = "",
-        bool multiLine = false)
-        => SendToFile(content.ToString(), LogLevel.Debug, tag, escapeCRLF, lineNumber, fileName, multiLine);
-
-    public static void Info(string text, string tag, bool escapeCRLF = true,
-        [CallerLineNumber] int lineNumber = 0,
-        [CallerFilePath] string fileName = "",
-        bool multiLine = false)
-        => SendToFile(text, LogLevel.Info, tag, escapeCRLF, lineNumber, fileName, multiLine);
-
-    public static void Warn(string text, string tag, bool escapeCRLF = true,
-        [CallerLineNumber] int lineNumber = 0,
-        [CallerFilePath] string fileName = "",
-        bool multiLine = false)
-        => SendToFile(text, LogLevel.Warning, tag, escapeCRLF, lineNumber, fileName, multiLine);
-
-    public static void Error(string text, string tag, bool escapeCRLF = true,
-        [CallerLineNumber] int lineNumber = 0,
-        [CallerFilePath] string fileName = "",
-        bool multiLine = false)
-        => SendToFile(text, LogLevel.Error, tag, escapeCRLF, lineNumber, fileName, multiLine);
-
-    public static void Fatal(string text, string tag, bool escapeCRLF = true,
-        [CallerLineNumber] int lineNumber = 0,
-        [CallerFilePath] string fileName = "",
-        bool multiLine = false)
-        => SendToFile(text, LogLevel.Fatal, tag, escapeCRLF, lineNumber, fileName, multiLine);
-
-    public static void Msg(string text, string tag, bool escapeCRLF = true,
-        [CallerLineNumber] int lineNumber = 0,
-        [CallerFilePath] string fileName = "",
-        bool multiLine = false)
-        => SendToFile(text, LogLevel.Message, tag, escapeCRLF, lineNumber, fileName, multiLine);
-
-    public static void Exception(Exception ex, string tag,
-        [CallerLineNumber] int lineNumber = 0,
-        [CallerFilePath] string fileName = "")
-        => SendToFile(ex.ToString(), LogLevel.Error, tag, false, lineNumber, fileName);
-
-    // 📌 当前方法调试
-    public static void CurrentMethod(
-        [CallerLineNumber] int lineNumber = 0,
-        [CallerFilePath] string fileName = "")
+    public static void Test(object content, string tag = "======= Test =======", bool escapeCRLF = true, [CallerLineNumber] int lineNumber = 0, [CallerFilePath] string fileName = "", bool multiLine = false) =>
+        SendToFile(content.ToString(), LogLevel.Debug, tag, escapeCRLF, lineNumber, fileName, multiLine);
+    public static void Info(string text, string tag, bool escapeCRLF = true, [CallerLineNumber] int lineNumber = 0, [CallerFilePath] string fileName = "", bool multiLine = false) =>
+        SendToFile(text, LogLevel.Info, tag, escapeCRLF, lineNumber, fileName, multiLine);
+    public static void Warn(string text, string tag, bool escapeCRLF = true, [CallerLineNumber] int lineNumber = 0, [CallerFilePath] string fileName = "", bool multiLine = false) =>
+        SendToFile(text, LogLevel.Warning, tag, escapeCRLF, lineNumber, fileName, multiLine);
+    public static void Error(string text, string tag, bool escapeCRLF = true, [CallerLineNumber] int lineNumber = 0, [CallerFilePath] string fileName = "", bool multiLine = false) =>
+        SendToFile(text, LogLevel.Error, tag, escapeCRLF, lineNumber, fileName, multiLine);
+    public static void Fatal(string text, string tag, bool escapeCRLF = true, [CallerLineNumber] int lineNumber = 0, [CallerFilePath] string fileName = "", bool multiLine = false) =>
+        SendToFile(text, LogLevel.Fatal, tag, escapeCRLF, lineNumber, fileName, multiLine);
+    public static void Msg(string text, string tag, bool escapeCRLF = true, [CallerLineNumber] int lineNumber = 0, [CallerFilePath] string fileName = "", bool multiLine = false) =>
+        SendToFile(text, LogLevel.Message, tag, escapeCRLF, lineNumber, fileName, multiLine);
+    public static void Exception(Exception ex, string tag, [CallerLineNumber] int lineNumber = 0, [CallerFilePath] string fileName = "") =>
+        SendToFile(ex.ToString(), LogLevel.Error, tag, false, lineNumber, fileName);
+    public static void CurrentMethod([CallerLineNumber] int lineNumber = 0, [CallerFilePath] string fileName = "")
     {
         StackFrame stack = new(1);
-
-        Msg(
-            $"\"{stack.GetMethod().ReflectedType.Name}.{stack.GetMethod().Name}\" 在 \"{Path.GetFileName(fileName)}({lineNumber})\" 被调用",
-            "方法追踪");
+        Msg($"\"{stack.GetMethod().ReflectedType.Name}.{stack.GetMethod().Name}\" Called in \"{Path.GetFileName(fileName)}({lineNumber})\"", "Method");
     }
 
     public static LogHandler Handler(string tag)
