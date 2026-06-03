@@ -15,18 +15,16 @@ internal class EACR
         {
             MessageReader sr = MessageReader.Get(reader);
             var rpc = (RpcCalls)callId;
-
             switch (rpc)
             {
                 case RpcCalls.StartMeeting:
                 {
                     AmongUsClient.Instance.KickPlayer(pc.Data.ClientId, true);
-                    Logger.SendInGame($"{pc.Data.PlayerName} 因尝试非法开会被封禁（疑似作弊）");
-                    Logger.Info($"{pc.Data.PlayerName} 因非法开会被封禁（作弊行为）", "EACR");
+                    Logger.SendInGame($"{pc.Data.PlayerName} was banned for being calling an invalid meeting (cheating)");
+                    Logger.Info($" {pc.Data.PlayerName} was banned for being calling an invalid meeting (cheating)", "EACR");
                     return true;
                 }
             }
-
             switch (callId)
             {
                 case 101: // Aum Chat
@@ -41,15 +39,17 @@ internal class EACR
                         if (!flag)
                         {
                             AmongUsClient.Instance.KickPlayer(pc.Data.ClientId, true);
-                            Logger.SendInGame($"{pc.Data.PlayerName} 因 AUM 聊天异常调用被封禁（作弊）");
-                            Logger.Info($"{pc.Data.PlayerName} AUM Chat 异常 RPC（作弊）", "EACR");
+                            Logger.SendInGame($"{pc.Data.PlayerName} was banned for AUM chat CallId (cheating)");
+                            Logger.Info($" {pc.Data.PlayerName} was banned for AUM chat CallId (cheating)", "EACR");
                             return true;
                         }
                     }
-                    catch { }
-                    break;
+                    catch
+                    {
 
-                case unchecked((byte)42069):
+                    }
+                    break;
+                case unchecked((byte)42069): // 85 AUM
                     try
                     {
                         var aumid = sr.ReadByte();
@@ -57,14 +57,16 @@ internal class EACR
                         if (aumid == pc.PlayerId)
                         {
                             AmongUsClient.Instance.KickPlayer(pc.Data.ClientId, true);
-                            Logger.SendInGame($"{pc.Data.PlayerName} 因 AUM RPC 被封禁（作弊）");
-                            Logger.Info($"{pc.Data.PlayerName} AUM RPC 检测作弊", "EACR");
+                            Logger.SendInGame($"{pc.Data.PlayerName} was banned for AUM CallId (cheating)");
+                            Logger.Info($" {pc.Data.PlayerName} was banned for AUM CallId (cheating)", "EACR");
                             return true;
                         }
                     }
-                    catch { }
-                    break;
+                    catch
+                    {
 
+                    }
+                    break;
                 case 119: // KN Chat
                     try
                     {
@@ -77,34 +79,35 @@ internal class EACR
                         if (!flag)
                         {
                             AmongUsClient.Instance.KickPlayer(pc.Data.ClientId, true);
-                            Logger.SendInGame($"{pc.Data.PlayerName} 因 KN 聊天异常被封禁（作弊）");
-                            Logger.Info($"{pc.Data.PlayerName} KN Chat 异常 RPC", "EACR");
+                            Logger.SendInGame($"{pc.Data.PlayerName} was banned for KN chat CallId (cheating)");
+                            Logger.Info($" {pc.Data.PlayerName} was banned for KN chat CallId (cheating)", "EACR");
                             return true;
                         }
                     }
-                    catch { }
-                    break;
+                    catch
+                    {
 
+                    }
+                    break;
                 case 250: // KN
                     if (sr.BytesRemaining == 0)
                     {
                         AmongUsClient.Instance.KickPlayer(pc.Data.ClientId, true);
-                        Logger.SendInGame($"{pc.Data.PlayerName} 因 KN RPC 被封禁（作弊）");
-                        Logger.Info($"{pc.Data.PlayerName} KN RPC 空数据异常", "EACR");
+                        Logger.SendInGame($"{pc.Data.PlayerName} was banned for KN CallId (cheating)");
+                        Logger.Info($" {pc.Data.PlayerName} was banned for KN CallId (cheating)", "EACR");
                         return true;
                     }
                     break;
-
-                case unchecked((byte)420): // SickoMenu
+                case unchecked((byte)420): // 164 Sicko
                     if (sr.BytesRemaining == 0)
                     {
                         AmongUsClient.Instance.KickPlayer(pc.Data.ClientId, true);
-                        Logger.SendInGame($"{pc.Data.PlayerName} 使用 SickoMenu RPC 被封禁（作弊）");
-                        Logger.Info($"{pc.Data.PlayerName} SickoMenu RPC 检测", "EACR");
+                        Logger.SendInGame($"{pc.Data.PlayerName} was banned for Sickomenu RPC (cheating)");
+                        Logger.Info($" {pc.Data.PlayerName} was banned for Sickomenu RPC (cheating)", "EACR");
                         return true;
                     }
                     break;
-            }
+                }
         }
         catch (Exception e)
         {
@@ -112,17 +115,18 @@ internal class EACR
         }
         return false;
     }
-
     public static bool RpcUpdateSystemCheck(PlayerControl player, SystemTypes systemType, byte amount)
     {
         var Mapid = Utils.GetActiveMapId();
 
         if (!AmongUsClient.Instance.AmHost)
+        {
             return false;
+        }
 
         if (player == null)
         {
-            Logger.Warn("玩家对象为空", "EACR-RpcUpdateSystemCheck");
+            Logger.Warn("PlayerControl is null", "EACR-RpcUpdateSystemCheck");
             return true;
         }
 
@@ -131,8 +135,8 @@ internal class EACR
             if (!player.Data.Role.IsImpostor && !player.isNew)
             {
                 AmongUsClient.Instance.KickPlayer(player.Data.ClientId, true);
-                Logger.SendInGame($"{player.Data.PlayerName} 因非法破坏任务被封禁（作弊）");
-                Logger.Info($"{player.Data.PlayerName} 非内鬼触发破坏系统", "EACR");
+                Logger.SendInGame($"{player.Data.PlayerName} was banned for invalid sabotage (cheating)");
+                Logger.Info($" {player.Data.PlayerName} was banned for invalid sabotage", "EACR");                
             }
         }
         else if (systemType == SystemTypes.LifeSupp)
@@ -155,7 +159,10 @@ internal class EACR
         else if (systemType == SystemTypes.Electrical)
         {
             if (Mapid == 5) goto YesCheat;
-            if (amount >= 5) goto YesCheat;
+            if (amount >= 5)
+            {
+                goto YesCheat;
+            }
         }
         else if (systemType == SystemTypes.Laboratory)
         {
@@ -179,18 +186,18 @@ internal class EACR
 
         if (Utils.IsMeeting && MeetingHud.Instance.state != MeetingHud.VoteStates.Animating)
         {
-            Logger.SendInGame($"{player.Data.PlayerName} 可能触发非法破坏（疑似作弊）");
-            Logger.Info($"{player.Data.PlayerName} 可疑破坏行为检测", "EACR");
+            Logger.SendInGame($"{player.Data.PlayerName} might have called an invalid sabotage (cheating)");
+            Logger.Info($" {player.Data.PlayerName} might have called an invalid sabotage (cheating)", "EACR");
             return true;
         }
 
-        return false;
+    return false;
 
     YesCheat:
         {
             AmongUsClient.Instance.KickPlayer(player.Data.ClientId, true);
-            Logger.SendInGame($"{player.Data.PlayerName} 因非法破坏系统被封禁（作弊）");
-            Logger.Info($"{player.Data.PlayerName} 非法破坏系统检测", "EACR");
+            Logger.SendInGame($"{player.Data.PlayerName} was banned for an invalid sabotage (cheating)");
+            Logger.Info($" {player.Data.PlayerName} was banned for an invalid sabotage", "EACR");     
             return true;
         }
     }

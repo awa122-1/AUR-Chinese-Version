@@ -26,9 +26,7 @@ public static class BanManager
     private static string VipListPath = $"{DataPath}/AUR-DATA/VIP.txt";
     private static string ModeratorListPath = $"{DataPath}/AUR-DATA/Moderator.txt";
     private static string AdminListPath = $"{DataPath}/AUR-DATA/Admin.txt";
-
     public static List<string> TempBanWhiteList = [];
-
     public static void Init()
     {
         try
@@ -37,41 +35,41 @@ public static class BanManager
 
             if (!File.Exists(DenyNameListPath))
             {
-                Logger.Warn("正在创建 DenyNameList.txt 文件", "BanManager");
+                Logger.Warn("Creating a new DenyNameList.txt file", "BanManager");
                 File.Create(DenyNameListPath).Close();
             }
             if (!File.Exists(BanListPath))
             {
-                Logger.Warn("正在创建 Banlist.txt 文件", "BanManager");
+                Logger.Warn("Creating a new Banlist.txt file", "BanManager");
                 File.Create(BanListPath).Close();
             }
             if (!File.Exists(BanWordPath))
             {
-                Logger.Warn("正在创建 Banlist.txt 文件", "BanManager");
+                Logger.Warn("Creating a new Banlist.txt file", "BanManager");
                 File.Create(BanWordPath).Close();
             }
             if (!File.Exists(VipListPath))
             {
-                Logger.Warn("正在创建 VIP.txt 文件", "BanManager");
+                Logger.Warn("Creating a new VIP.txt file", "BanManager");
                 File.Create(VipListPath).Close();
             }
             if (!File.Exists(ModeratorListPath))
             {
-                Logger.Warn("正在创建 Moderator.txt 文件", "BanManager");
+                Logger.Warn("Creating a new Moderator.txt file", "BanManager");
                 File.Create(ModeratorListPath).Close();
             }
             if (!File.Exists(AdminListPath))
             {
-                Logger.Warn("正在创建 Admin.txt 文件", "BanManager");
+                Logger.Warn("Creating a new Admin.txt file", "BanManager");
                 File.Create(AdminListPath).Close();
             }
+
         }
         catch (Exception ex)
         {
             Logger.Exception(ex, "BanManager");
         }
     }
-
     private static string GetResourcesTxt(string path)
     {
         var stream = Assembly.GetExecutingAssembly().GetManifestResourceStream(path);
@@ -79,48 +77,36 @@ public static class BanManager
         using StreamReader reader = new(stream, Encoding.UTF8);
         return reader.ReadToEnd();
     }
-
     public static string GetHashedPuid(this ClientData player)
     {
         if (player == null) return "";
         string puid = player.ProductUserId;
         return GetHashedPuid(puid);
     }
-
     public static string GetHashedPuid(string puid)
     {
         using SHA256 sha256 = SHA256.Create();
 
+        // get sha-256 hash
         byte[] sha256Bytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(puid));
         string sha256Hash = BitConverter.ToString(sha256Bytes).Replace("-", "").ToLower();
 
+        // pick front 5 and last 4
         return string.Concat(sha256Hash.AsSpan(0, 5), sha256Hash.AsSpan(sha256Hash.Length - 4));
     }
 
     public static void AddBanPlayer(ClientData player)
     {
         if (!AmongUsClient.Instance.AmHost || player == null) return;
-
-        if (!CheckBanList(player?.FriendCode, player?.GetHashedPuid())
-            && !TempBanWhiteList.Contains(player?.GetHashedPuid()))
+        if (!CheckBanList(player?.FriendCode, player?.GetHashedPuid()) && !TempBanWhiteList.Contains(player?.GetHashedPuid()))
         {
-            if (player?.GetHashedPuid() != "" &&
-                player?.GetHashedPuid() != null &&
-                player?.GetHashedPuid() != "e3b0cb855")
+            if (player?.GetHashedPuid() != "" && player?.GetHashedPuid() != null && player?.GetHashedPuid() != "e3b0cb855")
             {
                 var additionalInfo = "";
-
-                File.AppendAllText(
-                    BanListPath,
-                    $"{player?.FriendCode},{player?.GetHashedPuid()},{player.PlayerName.RemoveHtmlTags()}{additionalInfo}\n"
-                );
-
-                Logger.SendInGame($"已将 {player?.PlayerName.RemoveHtmlTags()}/{player?.FriendCode}/{player?.GetHashedPuid()} 加入封禁列表");
+                File.AppendAllText(BanListPath, $"{player?.FriendCode},{player?.GetHashedPuid()},{player.PlayerName.RemoveHtmlTags()}{additionalInfo}\n");
+                Logger.SendInGame($"Added {player?.PlayerName.RemoveHtmlTags()}/{player?.FriendCode}/{player?.GetHashedPuid()} to the BanList");
             }
-            else
-            {
-                Logger.Info($"无法将玩家 {player?.PlayerName.RemoveHtmlTags()}/{player?.FriendCode}/{player?.GetHashedPuid()} 添加到封禁列表", "AddBanPlayer");
-            }
+            else Logger.Info($"Failed to add player {player?.PlayerName.RemoveHtmlTags()}/{player?.FriendCode}/{player?.GetHashedPuid()} to the BanList", "AddBanPlayer");
         }
     }
 
@@ -130,30 +116,28 @@ public static class BanManager
 
         string friendcode = player?.FriendCode;
 
+        // Check file BanList.txt
         if (CheckBanList(friendcode, player?.GetHashedPuid()))
         {
             AmongUsClient.Instance.KickPlayer(player.Id, true);
-            Logger.Info($"{player.PlayerName} 已存在于封禁列表中，已被封禁", "BanListBan");
+            Logger.Info($"{player.PlayerName} was in the BanList and has been banned", "BanListBan");
             return;
         }
-
         if (TempBanWhiteList.Contains(player?.GetHashedPuid()))
         {
             AmongUsClient.Instance.KickPlayer(player.Id, true);
-            Logger.Info($"{player.PlayerName} 位于临时封禁列表中", "TempBan");
+            //This should not happen
+            Logger.Info($"{player.PlayerName} was in the Temporary BanList", "TempBan");
             return;
         }
     }
-
     public static bool CheckBanList(string code, string hashedpuid = "")
     {
         bool OnlyCheckPuid = false;
-
         if (code == "" && hashedpuid != "") OnlyCheckPuid = true;
         else if (code == "") return false;
 
         string noDiscrim = "";
-
         if (code.Contains('#'))
         {
             int index = code.IndexOf('#');
@@ -162,26 +146,19 @@ public static class BanManager
 
         try
         {
-            if (!Directory.Exists($"{DataPath}/AUR-DATA"))
-                Directory.CreateDirectory($"{DataPath}/AUR-DATA");
-
-            if (!File.Exists(BanListPath))
-                File.Create(BanListPath).Close();
+            if (!Directory.Exists($"{DataPath}/AUR-DATA")) Directory.CreateDirectory($"{DataPath}/AUR-DATA");
+            if (!File.Exists(BanListPath)) File.Create(BanListPath).Close();
 
             using StreamReader sr = new(BanListPath);
             string line;
-
             while ((line = sr.ReadLine()) != null)
             {
                 if (line == "") continue;
-
                 if (!OnlyCheckPuid)
                 {
                     if (line.Contains(code)) return true;
-                    if (!string.IsNullOrEmpty(noDiscrim) && !line.Contains('#') && line.Contains(noDiscrim))
-                        return true;
+                    if (!string.IsNullOrEmpty(noDiscrim) && !line.Contains('#') && line.Contains(noDiscrim)) return true;
                 }
-
                 if (line.Contains(hashedpuid)) return true;
             }
         }
@@ -189,53 +166,39 @@ public static class BanManager
         {
             Logger.Exception(ex, "CheckBanList");
         }
-
         return false;
     }
-
     public static bool IsPlayerInDenyName(ClientData client, string name)
     {
         if (name == "" || !AmongUsClient.Instance.AmHost) return false;
 
         var deniedNames = File.ReadAllLines(DenyNameListPath);
 
-        if (deniedNames
-            .Where(code => !string.IsNullOrWhiteSpace(code))
-            .Any(code => name.Contains(code, StringComparison.OrdinalIgnoreCase)))
+        if (deniedNames.Where(code => !string.IsNullOrWhiteSpace(code)).Any(code => name.Contains(code, StringComparison.OrdinalIgnoreCase)))
         {
-            AmongUsClient.Instance.KickPlayer(client.Id, false);
-
-            Logger.Info($"{name} 因名称命中 DenyNameList.txt 黑名单而被踢出", "Kick");
-            Logger.SendInGame($"{name} 因名称命中黑名单而被踢出");
-
+            AmongUsClient.Instance.KickPlayer(client.Id, false);    
+            Logger.Info($" {name} was kicked because their name was in DenyNameList.txt", "Kick");      
+            Logger.SendInGame($"{name} was kicked because their name was in DenyNameList.txt");    
             return true;
         }
-
-        return false;
+        else return false;
     }
 
     public static bool IsWordBanned(PlayerControl player, string input)
     {
-        if (input == "" ||
-            !AmongUsClient.Instance.AmHost ||
-            Utils.CheckAccessLevel(player.Data.FriendCode) > 0)
-            return false;
+        if (input == "" || !AmongUsClient.Instance.AmHost || Utils.CheckAccessLevel(player.Data.FriendCode) > 0) return false;
 
         var bannedWords = File.ReadAllLines(BanWordPath);
 
-        if (bannedWords
-            .Where(code => !string.IsNullOrWhiteSpace(code))
-            .Any(code => input.Contains(code, StringComparison.OrdinalIgnoreCase)))
+        if (bannedWords.Where(code => !string.IsNullOrWhiteSpace(code)).Any(code => input.Contains(code, StringComparison.OrdinalIgnoreCase)))
         {
-            AmongUsClient.Instance.KickPlayer(player.Data.ClientId, false);
-
-            Logger.Info($"{player.Data.PlayerName} 因发送违禁词而被踢出", "Kick");
-            Logger.SendInGame($"{player.Data.PlayerName} 因发送违禁词而被踢出");
-
+            AmongUsClient.Instance.KickPlayer(player.Data.ClientId, false);    
+            Logger.Info($" {player.Data.PlayerName} was kicked because they sent a banned word", "Kick");      
+            Logger.SendInGame($"{player.Data.PlayerName} was kicked because they sent a banned word");    
             return true;
         }
+        else return false;
 
-        return false;
     }
 
     [HarmonyPatch(typeof(BanMenu), nameof(BanMenu.Select))]
