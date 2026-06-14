@@ -1,4 +1,4 @@
-﻿global using HarmonyLib;
+global using HarmonyLib;
 global using System.Collections.Generic;
 global using System.Linq;
 global using Object = UnityEngine.Object;
@@ -43,7 +43,7 @@ public partial class Main : BasePlugin
 
     public static bool HasArgumentException;
     public static string CredentialsText;
-    public const string ModVersion = "v1.8.0";
+    public const string ModVersion = "v1.8.1";
 
     public static float GameTimer;
 
@@ -93,10 +93,11 @@ public partial class Main : BasePlugin
         LobbyMusic = Config.Bind("Client Options", "Lobby Music", false);
         DisableInfoWhenDead = Config.Bind("Client Options", "Disable Task/Kill View", false);
         DisableCommandHelper = Config.Bind("Client Options", "Disable Command Helper", false);
-        
+
         Translator.Init();
+        Translator.Reload();
         BanManager.Init();
-        
+
         Harmony.PatchAll();
 
         ConsoleManager.DetachConsole();
